@@ -7,22 +7,38 @@ class ChessBoard:
     BLACK = 1
     valid_color = (-1, 0, 1)
 
-    def __init__(self, size=19):
-        self.chessboard = np.zeros([size, size])
+    def __init__(self, shape=19):
+        """
+        :param shape: shape of chessboard
+        """
+        self.chessboard = np.zeros([shape, shape])
         self.breath = np.zeros_like(self.chessboard)
-        self.shape = size
+        self.shape = shape
 
     def validate_color(self, color):
+        """
+        :param color: color
+        :return: whether or not the specified color is legal
+        """
         if color in self.valid_color:
             return True
         return False
 
     def validate_pos(self, pos):
+        """
+        :param pos: position
+        :return: whether or not the specified position is legal
+        """
         if pos is None:
             return False
         return not (pos[0] >= self.shape or pos[0] < 0 or pos[1] >= self.shape or pos[1] < 0)
 
     def place_chess(self, pos=None, color=None):
+        """
+        :param pos: position that the chess will place
+        :param color: color of that chess
+        :return: None
+        """
         if not self.validate_color(color) or not self.validate_pos(pos):
             raise ValueError('Pos and Color')
         if self.chessboard[pos] != self.SPACE:
@@ -42,7 +58,7 @@ class ChessBoard:
 
     def check_breath_situation(self, chessboard=None):
         """
-        :param chessboard:
+        :param chessboard: chessboard
         :return: a list contain the breath situation like [white, black]
         """
         if chessboard is None:
@@ -65,6 +81,13 @@ class ChessBoard:
         return ret
 
     def count_breath(self, pos=None, color=None, chessboard=None, vis_map=None):
+        """
+        :param pos: the position that need to be tested
+        :param color: the color of the chess of the specified position (optional, used in recurrence)
+        :param chessboard: chessboard
+        :param vis_map: visit map
+        :return: the breath of given chess which at specified position, -1 for space
+        """
         if chessboard is None:
             chessboard = self.chessboard
         if color is None:
@@ -92,6 +115,9 @@ class ChessBoard:
                self.count_breath(pos=(pos[0], pos[1] + 1), color=color, chessboard=chessboard, vis_map=vis_map)
 
     def __str__(self):
+        """
+        :return: str
+        """
         black = '●'
         white = '୦'
         space = '.'
