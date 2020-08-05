@@ -14,8 +14,10 @@ class ChessBoard:
         self.chessboard = np.zeros([shape, shape])
         self.breath = np.zeros_like(self.chessboard)
         self.shape = shape
+        self.black_removed = 0
+        self.white_removed = 0
 
-    def validate_color(self, color):
+    def _validate_color(self, color):
         """
         :param color: color
         :return: whether or not the specified color is legal
@@ -24,7 +26,7 @@ class ChessBoard:
             return True
         return False
 
-    def validate_pos(self, pos):
+    def _validate_pos(self, pos):
         """
         :param pos: position
         :return: whether or not the specified position is legal
@@ -36,25 +38,49 @@ class ChessBoard:
     def place_chess(self, pos=None, color=None):
         """
         :param pos: position that the chess will place
-        :param color: color of that chess
+        :param color: color of the chess
         :return: None
         """
-        if not self.validate_color(color) or not self.validate_pos(pos):
-            raise ValueError('Pos and Color')
+        if not self._validate_color(color) or not self._validate_pos(pos):
+            raise ValueError('Position or Color')
         if self.chessboard[pos] != self.SPACE:
             raise ValueError('Position ' + str(pos) + ' already has a chess')
+        #  The position is space
+        #  Check whether it can remove another color's chess
+        ori_cb = self.chessboard
 
-        hypothesis_cb = self.chessboard.copy()
+        hypothesis_cb = ori_cb.copy()
         hypothesis_cb[pos] = color
 
-        count_breath = self.count_breath(pos=pos, chessboard=hypothesis_cb)
+        hyp_breath_situation = self.check_breath_situation(chessboard=hypothesis_cb)
 
-        if count_breath == 0:
-            raise ValueError('Cannot suicide')
+        if color == self.WHITE:
+            black_hyp = hyp_breath_situation[1]
 
-        print(pos, count_breath)
-        self.chessboard[pos] = color
-        print(pos, self.count_breath(pos=pos))
+            if np.sum(black_hyp == 0) != 0:
+                self.black_removed += np.sum(black_hyp == 0)
+                self.chessboard[black_hyp == 0] = self.SPACE
+                self.chessboard[pos] = color
+            else:  # check whether the white chess tries to suicide
+                count_breath = self.count_breath(pos=pos, chessboard=hypothesis_cb)
+                if count_breath == 0:
+                    raise ValueError('Cannot suicide')
+                self.chessboard[pos] = color
+        elif color == self.BLACK:
+            white_hyp = hyp_breath_situation[0]
+
+            if np.sum(white_hyp == 0) != 0:
+                self.white_removed += np.sum(white_hyp == 0)
+                self.chessboard[white_hyp == 0] = self.SPACE
+                self.chessboard[pos] = color
+            else:  # check whether the black chess tries to suicide
+                count_breath = self.count_breath(pos=pos, chessboard=hypothesis_cb)
+                if count_breath == 0:
+                    raise ValueError('Cannot suicide')
+                self.chessboard[pos] = color
+
+        # print(pos, count_breath)
+        # print(pos, self.count_breath(pos=pos))
 
     def check_breath_situation(self, chessboard=None):
         """
@@ -74,9 +100,9 @@ class ChessBoard:
                     white_breath[i, j] = black_breath[i, j] = -1
                 elif chessboard[i, j] == self.BLACK:
                     white_breath[i, j] = -1
-                    black_breath[i, j] = self.count_breath(pos=(i, j), color=self.BLACK)
+                    black_breath[i, j] = self.count_breath(pos=(i, j), color=self.BLACK, chessboard=chessboard)
                 elif chessboard[i, j] == self.WHITE:
-                    white_breath[i, j] = self.count_breath(pos=(i, j), color=self.WHITE)
+                    white_breath[i, j] = self.count_breath(pos=(i, j), color=self.WHITE, chessboard=chessboard)
                     black_breath[i, j] = -1
         return ret
 
@@ -94,7 +120,7 @@ class ChessBoard:
             color = chessboard[pos]
         if color == self.SPACE:
             return -1
-        if not self.validate_pos(pos):
+        if not self._validate_pos(pos):
             return 0
 
         if vis_map is None:
@@ -144,11 +170,25 @@ class ChessBoard:
 
 if __name__ == '__main__':
     cb = ChessBoard()
-    cb.place_chess((0, 0), cb.WHITE)
-    cb.place_chess((1, 0), cb.BLACK)
-    cb.place_chess((1, 1), cb.BLACK)
-    cb.place_chess((0, 1), cb.BLACK)
+
+    while True:
+        b = tuple([int(i) for i in input('B: ').split()])
+        print(b)
+        cb.place_chess(b, cb.BLACK)
+        print(cb)
+
+        w = tuple([int(i) for i in input('W: ').split()])
+        print(w)
+        cb.place_chess(w, cb.WHITE)
+        print(cb)
+
+    cb.place_chess((0, 0), cb.BLACK)
+    cb.place_chess((1, 0), cb.WHITE)
+    cb.place_chess((1, 1), cb.WHITE)
+    cb.place_chess((0, 1), cb.WHITE)
+
     print(cb.count_breath(pos=(0, 0)))
     print(cb)
-    for i in cb.check_breath_situation():
-        print(i, '\n\n')
+    # for i in cb.check_breath_situation():
+    #     print(i, '\n\n')
+
