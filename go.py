@@ -140,6 +140,10 @@ class ChessBoard:
                self.count_breath(pos=(pos[0], pos[1] - 1), color=color, chessboard=chessboard, vis_map=vis_map) + \
                self.count_breath(pos=(pos[0], pos[1] + 1), color=color, chessboard=chessboard, vis_map=vis_map)
 
+    def calculate_area(self, color=None, chessboard=None):
+        # TODO: Finish this function
+        pass
+
     def __str__(self):
         """
         :return: str
